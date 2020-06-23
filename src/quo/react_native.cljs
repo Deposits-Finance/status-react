@@ -25,6 +25,23 @@
 (def keyboard (.-Keyboard ^js rn))
 (def dismiss-keyboard! #(.dismiss ^js keyboard))
 
+(def dimensions (.-Dimensions ^js rn))
+
+(def pan-responder (.-PanResponder ^js rn))
+
+(defn create-pan-responder [opts]
+  (.create ^js pan-responder (clj->js opts)))
+
+(def animated (.-Animated rn))
+
+(def subtract (.-subtract ^js animated))
+
+(def animated-flat-list-class
+  (reagent/adapt-react-class (.-FlatList ^js animated)))
+
+(def animated-view
+  (reagent/adapt-react-class (.-View ^js animated)))
+
 (def ui-manager  (.-UIManager ^js rn))
 
 (def layout-animation (.-LayoutAnimation ^js rn))
@@ -50,7 +67,7 @@
     {:post [(some? %)]}
     (f data index)))
 
-(defn- base-list-props
+(defn base-list-props
   [{:keys [key-fn render-fn empty-component header footer separator data] :as props}]
   (merge {:data (to-array data)}
          (when key-fn            {:keyExtractor (wrap-key-fn key-fn)})
@@ -64,6 +81,8 @@
 (defn flat-list [props]
   [rn-flat-list (base-list-props props)])
 
+(defn animated-flat-list [props]
+  [animated-flat-list-class (base-list-props props)])
 ;; Hooks
 
 (defn use-window-dimensions []

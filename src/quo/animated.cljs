@@ -1,6 +1,7 @@
 (ns quo.animated
   (:refer-clojure :exclude [set divide])
   (:require [reagent.core :as reagent]
+            [quo.react-native :as rn]
             [quo.gesture-handler :as gh]
             [oops.core :refer [oget ocall]]
             ["react-native-reanimated" :default animated :refer (clockRunning Easing)]
@@ -8,10 +9,16 @@
             quo.react)
   (:require-macros [quo.react :refer [maybe-js-deps]]))
 
+(def create-animated-component (comp reagent/adapt-react-class (.-createAnimatedComponent animated)))
+
 (def view (reagent/adapt-react-class (.-View animated)))
 (def text (reagent/adapt-react-class (.-Text animated)))
 (def scroll-view (reagent/adapt-react-class (.-ScrollView animated)))
 (def code (reagent/adapt-react-class (.-Code animated)))
+(def animated-flat-list  (create-animated-component gh/flat-list-raw))
+
+(defn flat-list [props]
+  [animated-flat-list (rn/base-list-props props)])
 
 (def useCode (.-useCode animated))
 

@@ -5,7 +5,12 @@
             ["react-native-gesture-handler"
              :refer (TapGestureHandler PanGestureHandler LongPressGestureHandler
                                        PureNativeButton TouchableWithoutFeedback
-                                       createNativeWrapper State)]))
+                                       createNativeWrapper State
+                                       FlatList)]))
+
+(def flat-list-raw FlatList)
+
+(def flat-list (reagent/adapt-react-class FlatList))
 
 (def tap-gesture-handler
   (reagent/adapt-react-class TapGestureHandler))

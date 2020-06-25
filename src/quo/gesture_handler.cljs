@@ -5,7 +5,7 @@
             ["react-native-gesture-handler"
              :refer (TapGestureHandler PanGestureHandler LongPressGestureHandler
                                        PureNativeButton TouchableWithoutFeedback
-                                       createNativeWrapper State
+                                       createNativeWrapper State NativeViewGestureHandler
                                        FlatList)]))
 
 (def flat-list-raw FlatList)
@@ -33,6 +33,8 @@
    (createNativeWrapper (.createAnimatedComponent animated PureNativeButton)
                         #js {:shouldActivateOnStart   true
                              :shouldCancelWhenOutside true})))
+
+(def native-view-gesture-handler (reagent/adapt-react-class NativeViewGestureHandler))
 
 (def states {:began        (oget State "BEGAN")
              :active       (oget State "ACTIVE")

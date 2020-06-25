@@ -1,5 +1,6 @@
 (ns status-im.ui.screens.chat.views
   (:require [re-frame.core :as re-frame]
+            [reagent.core :as reagent]
             [status-im.i18n :as i18n]
             [status-im.ui.components.chat-icon.screen :as chat-icon.screen]
             [status-im.ui.components.colors :as colors]
@@ -8,10 +9,8 @@
             [status-im.ui.components.list.views :as list]
             [status-im.ui.components.react :as react]
             [status-im.ui.screens.chat.sheets :as sheets]
-            [status-im.ui.screens.chat.input.input :as input]
             [quo.animated :as animated]
-            [quo.hooks :as hooks]
-            [quo.react-native :as rn]
+            [status-im.ui.components.animation :as animation]
             [status-im.ui.screens.chat.message.message :as message]
             [status-im.ui.screens.chat.stickers.views :as stickers]
             [status-im.ui.screens.chat.styles.main :as style]
@@ -23,6 +22,7 @@
             [status-im.ui.components.topbar :as topbar]
             [status-im.ui.screens.chat.group :as chat.group]
             [status-im.ui.screens.chat.message.gap :as gap]
+            [status-im.ui.screens.chat.components.accessory :as accessory]
             [status-im.ui.screens.chat.components.input :as components]
             [status-im.ui.screens.chat.message.datemark :as message-datemark])
   (:require-macros [status-im.utils.views :refer [defview letsubs]]))
@@ -136,12 +136,13 @@
   (debounce/debounce-and-dispatch [:chat.ui/message-visibility-changed e] 5000))
 
 (defview messages-view
-  [{:keys [group-chat chat-id public?] :as chat} on-scroll]
+  [{:keys [group-chat chat-id public?] :as chat} bottom-space pan-handler]
   (letsubs [messages           [:chats/current-chat-messages-stream]
             no-messages?       [:chats/current-chat-no-messages?]
             current-public-key [:multiaccount/public-key]]
-    [rn/animated-flat-list
+    [list/flat-list
      (merge
+      pan-handler
       {:key-fn                       #(or (:message-id %) (:value %))
        :ref                          #(reset! messages-list-ref %)
        :header                       (when (and group-chat (not public?))
@@ -164,10 +165,11 @@
        :on-viewable-items-changed    on-viewable-items-changed
        :on-end-reached               #(re-frame/dispatch [:chat.ui/load-more-messages])
        :on-scroll-to-index-failed    #() ;;don't remove this
-       :scrollEventThrottle          16
+       ;; :scrollEventThrottle          16
+       :content-container-style      {:padding-top @bottom-space}
+       :scrollIndicatorInsets        {:top @bottom-space}
        :keyboardDismissMode          "interactive"
-       :keyboard-should-persist-taps :handled}
-      on-scroll)]))
+       :keyboard-should-persist-taps :handled})]))
 
 (defview empty-bottom-sheet []
   (letsubs [input-bottom-sheet [:chats/empty-chat-panel-height]]
@@ -186,17 +188,37 @@
       ;; [empty-bottom-sheet]
       )))
 
+(defn create-pan-responder [position-y]
+  (js->clj
+   (.-panHandlers
+    ^js
+    (.create
+     ^js react/pan-responder
+     #js {:onPanResponderMove (animation/event [nil {:moveY position-y}] {:useNativeDriver false})
+          :onPanResponderEnd  (fn []
+                                (animation/set-value position-y 0))}))))
+
 (defn chat []
   (let [{:keys [chat-id show-input? group-chat] :as current-chat}
         @(re-frame/subscribe [:chats/current-chat])
-        {:keys [pan-handlers position-y]} (hooks/use-pan-responder)]
+        position-y    (animated/value 0)
+        y             (animation/create-value 0)
+        bottom-space  (reagent/atom 0)
+        on-update     (fn [size]
+                        (prn size)
+                        (reset! bottom-space size))
+        pan-responder (create-pan-responder y)]
     [react/view {:style {:flex 1}}
      [connectivity/connectivity
       [topbar current-chat]
       [react/view {:style {:flex 1}}
        (when-not group-chat
          [add-contact-bar chat-id])
-       [messages-view current-chat pan-handlers]]]
-     (when show-input? 
-       [components/chat-input position-y])
+       ;; accessory/pan-gesture {:y position-y}
+       [messages-view current-chat bottom-space pan-responder]]]
+     (when show-input?
+       [accessory/view {:y               position-y
+                        :a-y             y
+                        :on-update-inset on-update}
+        [components/chat-input position-y]])
      [bottom-sheet]]))

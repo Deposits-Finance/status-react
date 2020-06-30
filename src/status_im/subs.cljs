@@ -594,16 +594,6 @@
      :else 272)))
 
 (re-frame/reg-sub
- :chats/empty-chat-panel-height
- :<- [:keyboard-height]
- (fn [kb-height]
-   (if (and platform/ios? (pos? kb-height))
-     (- kb-height
-        tabs.styles/minimized-tabs-height
-        (if platform/iphone-x? 34 0))
-     0)))
-
-(re-frame/reg-sub
  :chats/active-chats
  :<- [::chats]
  (fn [chats]

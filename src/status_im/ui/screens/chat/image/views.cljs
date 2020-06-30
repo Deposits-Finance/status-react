@@ -3,18 +3,7 @@
   (:require [status-im.ui.components.react :as react]
             [re-frame.core :as re-frame]
             [quo.core :as quo]
-            [status-im.ui.components.colors :as colors]
-            [status-im.ui.components.animation :as anim]))
-
-(defn show-panel-anim
-  [bottom-anim-value alpha-value]
-  (anim/start
-   (anim/parallel
-    [(anim/spring bottom-anim-value {:toValue         0
-                                     :useNativeDriver true})
-     (anim/timing alpha-value {:toValue         1
-                               :duration        500
-                               :useNativeDriver true})])))
+            [status-im.ui.components.colors :as colors])
 
 (defn input-button [images-showing?]
   [quo/button
@@ -66,18 +55,12 @@
         (when second-img
           [image-preview second-img false panel-height])])]))
 
-(defview image-view []
-  (letsubs [panel-height      [:chats/chat-panel-height]
-            bottom-anim-value (anim/create-value @panel-height)
-            alpha-value       (anim/create-value 0)]
-    {:component-did-mount (fn []
-                            (show-panel-anim bottom-anim-value alpha-value)
-                            (re-frame/dispatch [:chat.ui/camera-roll-get-photos 20]))}
-    [react/animated-view {:style {:background-color colors/white
-                                  :height           panel-height
-                                  :transform        [{:translateY bottom-anim-value}]
-                                  :opacity          alpha-value}}
-     [react/scroll-view {:horizontal true :style {:flex 1}}
-      [react/view {:flex 1 :flex-direction :row :margin-horizontal 8}
-       [buttons]
-       [photos panel-height]]]]))
+(defview image-view [panel-height]
+  {:component-did-mount (fn []
+                          (re-frame/dispatch [:chat.ui/camera-roll-get-photos 20]))}
+  [react/animated-view {:style {:background-color colors/white
+                                :flex             1}}
+   [react/scroll-view {:horizontal true :style {:flex 1}}
+    [react/view {:flex 1 :flex-direction :row :margin-horizontal 8}
+     [buttons]
+     [photos panel-height]]]])

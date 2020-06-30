@@ -9,7 +9,6 @@
             [status-im.i18n :as i18n]
             [quo.core :as quo]
             [status-im.ui.screens.chat.stickers.styles :as styles]
-            [status-im.ui.components.animation :as anim]
             [status-im.utils.contenthash :as contenthash]
             [status-im.utils.debounce :as debounce]))
 
@@ -119,16 +118,6 @@
     [react/view {:style (styles/pack-icon background-color icon-size icon-horizontal-margin)}
      icon]]])
 
-(defn show-panel-anim
-  [bottom-anim-value alpha-value]
-  (anim/start
-   (anim/parallel
-    [(anim/spring bottom-anim-value {:toValue 0
-                                     :useNativeDriver true})
-     (anim/timing alpha-value {:toValue  1
-                               :duration 500
-                               :useNativeDriver true})])))
-
 (defview scroll-indicator []
   (letsubs [window-width [:dimensions/window-width]]
     [react/view {:style {:height           2
@@ -139,15 +128,9 @@
 
 (defview stickers-view []
   (letsubs [selected-pack     [:stickers/selected-pack]
-            installed-packs   [:stickers/installed-packs-vals]
-            panel-height      [:chats/chat-panel-height]
-            bottom-anim-value (anim/create-value @panel-height)
-            alpha-value       (anim/create-value 0)]
-    {:component-did-mount #(show-panel-anim bottom-anim-value alpha-value)}
-    [react/animated-view {:style {:background-color colors/white
-                                  :height           panel-height
-                                  :transform        [{:translateY bottom-anim-value}]
-                                  :opacity          alpha-value}}
+            installed-packs   [:stickers/installed-packs-vals]]
+    [react/view {:style {:background-color colors/white
+                         :flex             1}}
      (cond
        (= selected-pack :recent)   [stickers-paging-panel installed-packs selected-pack]
        (not (seq installed-packs)) [no-stickers-yet-panel]

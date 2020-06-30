@@ -6,11 +6,13 @@
              :refer (TapGestureHandler PanGestureHandler LongPressGestureHandler
                                        PureNativeButton TouchableWithoutFeedback
                                        createNativeWrapper State NativeViewGestureHandler
-                                       FlatList)]))
+                                       FlatList ScrollView)]))
 
 (def flat-list-raw FlatList)
 
 (def flat-list (reagent/adapt-react-class FlatList))
+
+(def scroll-view (reagent/adapt-react-class ScrollView))
 
 (def tap-gesture-handler
   (reagent/adapt-react-class TapGestureHandler))

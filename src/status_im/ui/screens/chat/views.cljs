@@ -10,7 +10,7 @@
             [status-im.ui.components.react :as react]
             [status-im.ui.screens.chat.sheets :as sheets]
             [quo.animated :as animated]
-            [status-im.ui.components.animation :as animation]
+            [quo.react-native :as rn]
             [status-im.ui.screens.chat.message.message :as message]
             [status-im.ui.screens.chat.stickers.views :as stickers]
             [status-im.ui.screens.chat.styles.main :as style]
@@ -165,60 +165,55 @@
        :on-viewable-items-changed    on-viewable-items-changed
        :on-end-reached               #(re-frame/dispatch [:chat.ui/load-more-messages])
        :on-scroll-to-index-failed    #() ;;don't remove this
-       ;; :scrollEventThrottle          16
        :content-container-style      {:padding-top @bottom-space}
        :scrollIndicatorInsets        {:top @bottom-space}
        :keyboardDismissMode          "interactive"
        :keyboard-should-persist-taps :handled})]))
 
-(defview empty-bottom-sheet []
-  (letsubs [input-bottom-sheet [:chats/empty-chat-panel-height]]
-    [react/view {:height input-bottom-sheet}]))
-
-(defview bottom-sheet []
-  (letsubs [input-bottom-sheet [:chats/current-chat-ui-prop :input-bottom-sheet]]
-    (case input-bottom-sheet
-      :stickers
-      [stickers/stickers-view]
-      :extensions
-      [extensions/extensions-view]
-      :images
-      [image/image-view]
-      nil
-      ;; [empty-bottom-sheet]
-      )))
-
-(defn create-pan-responder [position-y]
-  (js->clj
-   (.-panHandlers
-    ^js
-    (.create
-     ^js react/pan-responder
-     #js {:onPanResponderMove (animation/event [nil {:moveY position-y}] {:useNativeDriver false})
-          :onPanResponderEnd  (fn []
-                                (animation/set-value position-y 0))}))))
+(defn bottom-sheet [input-bottom-sheet bottom-space]
+  (case input-bottom-sheet
+    :stickers
+    [stickers/stickers-view]
+    :extensions
+    [extensions/extensions-view]
+    :images
+    [image/image-view bottom-space]
+    nil))
 
 (defn chat []
-  (let [{:keys [chat-id show-input? group-chat] :as current-chat}
-        @(re-frame/subscribe [:chats/current-chat])
-        position-y    (animated/value 0)
-        y             (animation/create-value 0)
-        bottom-space  (reagent/atom 0)
-        on-update     (fn [size]
-                        (prn size)
-                        (reset! bottom-space size))
-        pan-responder (create-pan-responder y)]
-    [react/view {:style {:flex 1}}
-     [connectivity/connectivity
-      [topbar current-chat]
-      [react/view {:style {:flex 1}}
-       (when-not group-chat
-         [add-contact-bar chat-id])
-       ;; accessory/pan-gesture {:y position-y}
-       [messages-view current-chat bottom-space pan-responder]]]
-     (when show-input?
-       [accessory/view {:y               position-y
-                        :a-y             y
-                        :on-update-inset on-update}
-        [components/chat-input position-y]])
-     [bottom-sheet]]))
+  (let [bottom-space     (reagent/atom 0)
+        active-panel     (reagent/atom nil)
+        position-y       (animated/value 0)
+        on-update        (partial reset! bottom-space)
+        pan-responder    (accessory/create-pan-responder position-y)
+        set-active-panel (fn [panel]
+                           (reset! active-panel panel)
+                           (rn/configure-next
+                            #js {:duration 250
+                                 ;; :delete   {:duration 250
+                                 ;;            ;; :delay    250
+                                 ;;            :property (-> ^js react/layout-animation .-Properties .-opacity)
+                                 ;;            :type     (-> ^js react/layout-animation .-Types .-easeOut)}
+                                 :update   {:duration 250
+                                            :type     (-> ^js rn/layout-animation .-Types .-keyboard)}})
+                           (when panel
+                             (js/setTimeout #(react/dismiss-keyboard!) 100)))]
+    (fn []
+      (let [{:keys [chat-id show-input? group-chat] :as current-chat}
+            @(re-frame/subscribe [:chats/current-chat])]
+        [react/view {:style {:flex 1}}
+         [connectivity/connectivity
+          [topbar current-chat]
+          [react/view {:style {:flex 1}}
+           (when-not group-chat
+             [add-contact-bar chat-id])
+           [messages-view current-chat bottom-space pan-responder]]]
+         (when show-input?
+           [accessory/view {:y               position-y
+                            :has-panel       (boolean @active-panel)
+                            :on-close        #(set-active-panel nil)
+                            :on-update-inset on-update}
+            [components/chat-toolbar {:active-panel     @active-panel
+                                      :set-active-panel set-active-panel}]
+            [react/view {:flex 1}
+             [bottom-sheet @active-panel @bottom-space]]])]))))

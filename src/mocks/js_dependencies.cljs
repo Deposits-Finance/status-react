@@ -167,6 +167,7 @@
                                        :TouchableWithoutFeedback #js {}
                                        :NativeViewGestureHandler #js {}
                                        :FlatList                 #js {}
+                                       :ScrollView               #js {}
                                        :createNativeWrapper      identity})
 
 (def react-native-redash #js {:clamp nil})

@@ -1,6 +1,5 @@
 (ns status-im.ui.screens.chat.components.input
-  (:require [reagent.core :as reagent]
-            [status-im.ui.components.icons.vector-icons :as icons]
+  (:require [status-im.ui.components.icons.vector-icons :as icons]
             [quo.react-native :as rn]
             [status-im.ui.screens.chat.components.style :as styles]
             [status-im.ui.screens.chat.components.reply :as reply]

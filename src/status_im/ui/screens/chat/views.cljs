@@ -210,6 +210,7 @@
            [messages-view current-chat bottom-space pan-responder]]]
          (when show-input?
            [accessory/view {:y               position-y
+                            :bar-height      52
                             :has-panel       (boolean @active-panel)
                             :on-close        #(set-active-panel nil)
                             :on-update-inset on-update}

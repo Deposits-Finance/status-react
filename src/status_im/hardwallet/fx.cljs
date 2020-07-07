@@ -4,7 +4,8 @@
             [status-im.hardwallet.card :as card]
             [status-im.native-module.core :as status]
             [status-im.utils.platform :as platform]
-            ["react-native" :refer (AsyncStorage BackHandler)]))
+            ["react-native" :refer (BackHandler)]
+            ["@react-native-community/async-storage" :default AsyncStorage]))
 
 (re-frame/reg-fx
  :hardwallet/get-application-info

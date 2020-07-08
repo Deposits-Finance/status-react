@@ -25,14 +25,10 @@
                        new-height (- height screen-y)]
                    (when-not (= new-height @keyboard-height)
                      (when (and duration easing)
-                       (let [delay    110.72
-                             duration (max 10 duration)]
-                         (rn/configure-next
-                          #js {:duration duration
-                               :delay    delay
-                               :update   {:duration duration
-                                          :delay    delay
-                                          :type     (-> ^js rn/layout-animation .-Types (aget easing))}}))))
+                       (rn/configure-next
+                        #js {:duration (max 10 duration)
+                             :update   {:duration (max 10 duration)
+                                        :type     (-> ^js rn/layout-animation .-Types (aget easing))}})))
                    (reset! keyboard-end-pos screen-y)
                    (reset! keyboard-height new-height)
                    (swap! keyboard-max-height max new-height)))]

@@ -153,10 +153,10 @@
   (.withTimingTransition ^js redash val (clj->js config)))
 
 (defn use-spring-transition [val config]
-  (.withSpringTransition ^js redash val (clj->js config)))
+  (.useSpringTransition ^js redash val (clj->js config)))
 
 (defn use-timing-transition [val config]
-  (.withTimingTransition ^js redash val (clj->js config)))
+  (.useTimingTransition ^js redash val (clj->js config)))
 
 (defn re-timing [config]
   (.timing ^js redash (clj->js config)))

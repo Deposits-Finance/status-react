@@ -170,32 +170,26 @@
        :keyboardDismissMode          "interactive"
        :keyboard-should-persist-taps :handled})]))
 
-(defn bottom-sheet [input-bottom-sheet bottom-space]
+(defn bottom-sheet [input-bottom-sheet]
   (case input-bottom-sheet
     :stickers
     [stickers/stickers-view]
     :extensions
     [extensions/extensions-view]
     :images
-    [image/image-view bottom-space]
+    [image/image-view]
     nil))
 
 (defn chat []
   (let [bottom-space     (reagent/atom 0)
         active-panel     (reagent/atom nil)
         position-y       (animated/value 0)
+        pan-state        (animated/value 0)
         on-update        (partial reset! bottom-space)
-        pan-responder    (accessory/create-pan-responder position-y)
+        pan-responder    (accessory/create-pan-responder position-y pan-state)
         set-active-panel (fn [panel]
                            (reset! active-panel panel)
-                           (rn/configure-next
-                            #js {:duration 250
-                                 ;; :delete   {:duration 250
-                                 ;;            ;; :delay    250
-                                 ;;            :property (-> ^js react/layout-animation .-Properties .-opacity)
-                                 ;;            :type     (-> ^js react/layout-animation .-Types .-easeOut)}
-                                 :update   {:duration 250
-                                            :type     (-> ^js rn/layout-animation .-Types .-keyboard)}})
+                           (rn/configure-next (:ease-in-ease-out rn/layout-animation-presets))
                            (when panel
                              (js/setTimeout #(react/dismiss-keyboard!) 100)))]
     (fn []
@@ -210,11 +204,10 @@
            [messages-view current-chat bottom-space pan-responder]]]
          (when show-input?
            [accessory/view {:y               position-y
-                            :bar-height      52
+                            :pan-state       pan-state
                             :has-panel       (boolean @active-panel)
                             :on-close        #(set-active-panel nil)
                             :on-update-inset on-update}
             [components/chat-toolbar {:active-panel     @active-panel
                                       :set-active-panel set-active-panel}]
-            [react/view {:flex 1}
-             [bottom-sheet @active-panel @bottom-space]]])]))))
+            [bottom-sheet @active-panel]])]))))

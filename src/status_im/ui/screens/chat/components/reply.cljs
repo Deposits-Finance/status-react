@@ -2,6 +2,8 @@
   (:require [quo.core :as quo]
             [quo.react-native :as rn]
             [status-im.i18n :as i18n]
+            [quo.design-system.colors :as colors]
+            [quo.components.animated.pressable :as pressable]
             [status-im.ui.components.icons.vector-icons :as icons]
             [status-im.ethereum.stateofus :as stateofus]
             [status-im.ui.screens.chat.components.style :as styles]
@@ -25,7 +27,7 @@
 (defn reply-message [{:keys [from content]}]
   (let [contact-name       @(re-frame/subscribe [:contacts/contact-name-by-identity from])
         current-public-key @(re-frame/subscribe [:multiaccount/public-key])]
-    [rn/view {:style (styles/reply-container)}
+    [rn/view {:style (styles/reply-container false)}
      [rn/view {:style (styles/reply-content)}
       [quo/text {:weight          :medium
                  :number-of-lines 1
@@ -37,6 +39,18 @@
                  :style           {:line-height 18}}
        (:text content)]]
      [rn/view
-      [rn/touchable-highlight {:on-press #(re-frame/dispatch [:chat.ui/cancel-message-reply])
-                               :style (styles/close-button)}
-       [icons/icon :main-icons/close-circle {}]]]]))
+      [pressable/pressable {:on-press #(re-frame/dispatch [:chat.ui/cancel-message-reply])}
+       [icons/icon :main-icons/close-circle {:container-style (styles/close-button)
+                                             :color           (:icon-01 @colors/theme)}]]]]))
+
+(defn send-image [{:keys [uri]}]
+  [rn/view {:style (styles/reply-container true)}
+   [rn/view {:style (styles/reply-content)}
+    [rn/image {:source {:uri uri}
+               :style  {:width         56
+                        :height        56
+                        :border-radius 4}}]]
+   [rn/view
+    [pressable/pressable {:on-press #(re-frame/dispatch [:chat.ui/cancel-sending-image])}
+     [icons/icon :main-icons/close-circle {:container-style (styles/close-button)
+                                           :color           (:icon-05 @colors/theme)}]]]])

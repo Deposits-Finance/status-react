@@ -74,16 +74,15 @@
                              :on-focus            #(reset! show-error false)
                              :on-submit-editing   on-submit
                              :on-change-text      #(do
-                                                     (reset! show-error false)
-                                                     (reset! confirm (security/mask-data %)))}]]]
-          (when processing?
-            [rn/view {:align-items      :center
-                      :padding-vertical 8}
-             [rn/activity-indicator {:size      :large
-                                     :animating true}]
-             [rn/view {:padding-vertical 8}
-              [quo/text {:color :secondary}
-               (i18n/label :t/processing)]]])
+                                                     (reset! confirm (security/mask-data %))
+                                                     (cond
+                                                       (> (count @password) (count @confirm))
+                                                       (reset! show-error false)
+
+                                                       (not (confirm-password @password @confirm))
+                                                       (reset! show-error true)
+
+                                                       :else (reset! show-error false)))}]]]
           [rn/view
            [quo/text {:color :secondary
                       :align :center
@@ -91,12 +90,23 @@
             (i18n/label :t/password-description)]]]
          [toolbar/toolbar
           (merge {:show-border? true}
-                 {:right
-                  [quo/button
-                   {:on-press            on-submit
-                    :accessibility-label :onboarding-next-button
-                    :disabled            (or (nil? @confirm)
-                                             processing?)
-                    :type                :secondary
-                    :after               :main-icons/next}
-                   (i18n/label :t/next)]})]]))))
+                 (if processing?
+                   {:center
+                    [rn/view {:align-items     :center
+                              :justify-content :center
+                              :flex-direction  :row}
+                     [rn/activity-indicator {:size      :small
+                                             :animating true}]
+                     [rn/view {:padding-horizontal 8}
+                      [quo/text {:color :secondary}
+                       (i18n/label :t/processing)]]]}
+                   {:right
+                    [quo/button
+                     {:on-press            on-submit
+                      :accessibility-label :onboarding-next-button
+                      :disabled            (or (nil? @confirm)
+                                               (not valid-password)
+                                               processing?)
+                      :type                :secondary
+                      :after               :main-icons/next}
+                     (i18n/label :t/next)]}))]]))))

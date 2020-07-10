@@ -102,7 +102,7 @@
       {:accessibility-label (keyword (str "select-storage-" type))
        :on-press #(re-frame/dispatch
                    [:intro-wizard/on-key-storage-selected
-                    (if (and config/hardwallet-enabled?
+                    (if (and config/keycard-enabled?
                              (or platform/android?
                                  config/keycard-test-menu-enabled?))
                       type

@@ -3,8 +3,8 @@
   (:require [re-frame.core :as re-frame]
             [status-im.ui.components.react :as react]
             [status-im.multiaccounts.recover.core :as multiaccounts.recover]
-            [status-im.hardwallet.recovery :as hardwallet]
-            [status-im.hardwallet.nfc :as nfc]
+            [status-im.keycard.recovery :as keycard]
+            [status-im.keycard.nfc :as nfc]
             [status-im.i18n :as i18n]
             [status-im.utils.config :as config]
             [status-im.ui.components.colors :as colors]
@@ -52,14 +52,14 @@
       :accessibility-label :enter-seed-phrase-button
       :icon                :main-icons/text
       :on-press            #(hide-sheet-and-dispatch [::multiaccounts.recover/enter-phrase-pressed])}]
-    (when (and config/hardwallet-enabled?
+    (when (and config/keycard-enabled?
                (or platform/android?
                    config/keycard-test-menu-enabled?)
                (nfc/nfc-supported?))
       [quo/list-item
        {:theme               :accent
         :title               (i18n/label :t/recover-with-keycard)
-        :disabled            (not config/hardwallet-enabled?)
+        :disabled            (not config/keycard-enabled?)
         :accessibility-label :recover-with-keycard-button
         :icon                [react/view {:border-width     1
                                           :border-radius    20
@@ -71,7 +71,7 @@
                                           :height           40}
                               [react/image {:source (resources/get-image :keycard-logo-blue)
                                             :style  {:width 24 :height 24}}]]
-        :on-press            #(hide-sheet-and-dispatch [::hardwallet/recover-with-keycard-pressed])}])]])
+        :on-press            #(hide-sheet-and-dispatch [::keycard/recover-with-keycard-pressed])}])]])
 
 (def bottom-sheet
   {:content bottom-sheet-view})
